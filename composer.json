@@ -1,0 +1,16 @@
+{
+    "name": "kristallio/clienttether-gravityforms-integration",
+    "type": "project",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "kristall.io",
+            "email": "hello@kristall.io"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {"Inc\\" : "./inc"}
+    }
+}
