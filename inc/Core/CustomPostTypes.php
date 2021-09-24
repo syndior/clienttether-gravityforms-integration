@@ -56,7 +56,7 @@ class CustomPostTypes
                     'public'                => false,
                     'publicly_queryable'    => false,
                     'show_ui'               => true,
-                    'show_in_menu'          => CTGF_API_ADMIN_PAGE,
+                    'show_in_menu'          => 'ctgfapi-lead-submissions',
                     'hierarchical'          => false,
 					'show_in_nav_menus'     => false,
 					'rewrite'               => false,
@@ -92,9 +92,12 @@ class CustomPostTypes
 
     public function render_entry_meta_box_content( $current_post )
     {
-        // $current_post = $args['post'];
 
+        // output html variable
         $output = '';
+
+        $output .= '<table class="form-table" role="presentation">';
+        $output .= '<tbody>';
 
         if( isset($current_post) && isset($current_post->ID) ){
 
@@ -103,14 +106,18 @@ class CustomPostTypes
             if( !empty($form_fields) ){
 
                 foreach( $form_fields as $field_key => $field_options ){
-
+                    $output .= '<tr>';
                     $output .= $this->render_form_field( $current_post->ID, $field_key, $field_options );
+                    $output .= '</tr>';
 
                 }
 
             }
 
         }
+
+        $output .= '</tbody>';
+        $output .= '</table>';
 
         echo $output;
 
@@ -126,7 +133,7 @@ class CustomPostTypes
                 'default_enabled'   => true,  
                 'required'          => true, 
                 'mapable'           => false,
-                'render_callback'   => array( $this, 'render_gform_field' ) 
+                'render_callback'   => array( $this, 'render_gform_field' ),
             ),
 
             'ctgfapi_first_name' => array( 
@@ -135,7 +142,7 @@ class CustomPostTypes
                 'default_enabled'   => true,  
                 'required'          => true, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_last_name' => array( 
@@ -144,7 +151,7 @@ class CustomPostTypes
                 'default_enabled'   => true,  
                 'required'          => true, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_phone' => array( 
@@ -153,7 +160,7 @@ class CustomPostTypes
                 'default_enabled'   => false,
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_email'         => array( 
@@ -162,7 +169,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_smsok' => array( 
@@ -171,7 +178,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_address' => array( 
@@ -180,7 +187,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_city' => array( 
@@ -189,7 +196,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_state' => array( 
@@ -198,7 +205,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_zip' => array( 
@@ -207,7 +214,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_company_name' => array( 
@@ -216,7 +223,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_tags' => array( 
@@ -225,7 +232,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => false,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_age' => array( 
@@ -234,7 +241,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_gender'        => array( 
@@ -243,7 +250,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => true,
-                'render_callback'   => null 
+                'render_callback'   => null,
             ),
 
             'ctgfapi_lead_source' => array( 
@@ -252,7 +259,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => false,
-                'render_callback'   => array( $this, 'render_lead_source_field' ) 
+                'render_callback'   => array( $this, 'render_lead_source_field' ),
             ),
 
             'ctgfapi_action_plan' => array( 
@@ -261,7 +268,7 @@ class CustomPostTypes
                 'default_enabled'   => false, 
                 'required'          => false, 
                 'mapable'           => false,
-                'render_callback'   => array( $this, 'render_action_plan_field' ) 
+                'render_callback'   => array( $this, 'render_action_plan_field' ),
             ),
 
         );
@@ -276,13 +283,18 @@ class CustomPostTypes
 
         if( isset($post_id) && isset($field_key) && strlen($field_key) > 0 && isset($form_field) && !empty($form_field) && is_array($form_field) ){
 
+            // row label
+            $html .= '<th scope="row">' . $form_field['label'] .'</th>';
+
+            // row field input element
+            $html .= '<td>';
             if( isset($form_field['render_callback']) && isset($form_field['render_callback'][0]) && isset($form_field['render_callback'][1]) ){
                 
                 $object = $form_field['render_callback'][0];
                 $mothod = $form_field['render_callback'][1];
 
                 if( is_object( $object ) && method_exists( $object, $mothod ) ){
-                    $html = $object->{$mothod}( $form_field );
+                    $html .= $object->{$mothod}( $post_id, $form_field );
                 }
 
 
@@ -294,22 +306,27 @@ class CustomPostTypes
 
                 // prepare CSS classes for field
                 $css_classes    = array( 'ctgfapi_admin_field' );
-                $css_classes[]  = 'ctgfapi_' . $form_field['type'];
                 $css_classes[]  = $field_key;
 
                 $field_css_classes = implode( ' ', $css_classes );
 
-                // set label element for form fields
-                $html .= '<p>';
-                $html .= '<label for="'. $field_key .'">'. $form_field['label'] .'</label>';
+                
                 $html .= '<input class="'. $field_css_classes .'" id="'. $field_key .'" type="text" name="'. $field_key .'" value="'. $field_value .'">';
-                $html .= '</p>';
 
             }
+            $html .= '</td>';
 
         }
 
         return $html;
+    }
+
+
+    public function render_gform_field( $post_id, $form_field )
+    {
+        var_dump( $post_id );
+        var_dump( $form_field );
+        return '';
     }
 
 }

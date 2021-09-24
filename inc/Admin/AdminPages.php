@@ -32,6 +32,19 @@ class AdminPages
 
             add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function, $icon_url, $position );
         }
+        
+        if( function_exists( 'add_submenu_page' ) ){
+            
+            $parent_slug        = CTGF_API_ADMIN_PAGE;
+            $page_title         = 'Lead Submission';
+            $menu_title         = 'Lead Submission';
+            $capability         = 'manage_options';
+            $menu_slug          = 'edit.php?post_type=ctgfapi_entry_rules';
+            $function           = '';
+            $position           = 99;
+
+            add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, $menu_slug, $function, $position );
+        }
     }
 
 
