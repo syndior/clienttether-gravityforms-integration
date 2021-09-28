@@ -53,7 +53,8 @@ input:checked + .wp_admin_fields_slider:before {
 /*
   Fix admin icon size
 */
-.toplevel_page_ctgfapi-settings-page .wp-menu-image img{
+.toplevel_page_crb_carbon_fields_container_ctgfapi-settings-page .wp-menu-image img,
+.menu-icon-ctgfapi_entry_rules .wp-menu-image img{
   width: 23px;
   padding-top: 6px !important;
 }

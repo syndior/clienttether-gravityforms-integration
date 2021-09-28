@@ -12,9 +12,9 @@ final class Init
             Base\SettingsLink::class,
             Base\Enqueue::class,
             Admin\AdminNotice::class,
-            Admin\AdminPages::class,
             Api\ApiHandler::class,
             Core\CustomPostTypes::class,
+            Core\CustomFields::class,
         );
     }
  

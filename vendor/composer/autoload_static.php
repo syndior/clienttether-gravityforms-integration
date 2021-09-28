@@ -11,12 +11,20 @@ class ComposerStaticInitf9b0ac28d561c155ba8b53db682eb93c
         array (
             'Inc\\' => 4,
         ),
+        'C' => 
+        array (
+            'Carbon_Fields\\' => 14,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
         'Inc\\' => 
         array (
             0 => __DIR__ . '/../..' . '/inc',
+        ),
+        'Carbon_Fields\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/htmlburger/carbon-fields/core',
         ),
     );
 
