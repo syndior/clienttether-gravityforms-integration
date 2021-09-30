@@ -1,6 +1,7 @@
 <?php 
 namespace Inc\Api;
 use \Inc\Admin\AdminNotice;
+use \Base\HelperFunctions;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -12,6 +13,7 @@ class ApiHandler
     {
         // dynamically hook with gform
         add_action( 'gform_after_submission', array( $this, 'gform_submission_trigger' ), 10, 2 );
+
     }
 
 
@@ -36,18 +38,13 @@ class ApiHandler
                 $entry_status = carbon_get_post_meta( $post_id, 'ctgfapi_entry_status' );
                 if( $entry_status == 'enabled' ){
 
-                    $selected_form_id       = carbon_get_post_meta( $post_id, 'ctgfapi_selected_form' );
-                    $first_name_field_id    = carbon_get_post_meta( $post_id, 'ctgfapi_user_first_name' );
-                    $last_name_field_id     = carbon_get_post_meta( $post_id, 'ctgfapi_user_last_name' );
-                    $email_field_id         = carbon_get_post_meta( $post_id, 'ctgfapi_user_email' );
-
-                    $this->write_to_error_log( 'post_meta', get_post_meta( $post_id ) );
-                    $this->write_to_error_log( 'selected_form_id', $selected_form_id );
-                    $this->write_to_error_log( 'first_name_field_id', $first_name_field_id );
-                    $this->write_to_error_log( 'last_name_field_id', $last_name_field_id );
-                    $this->write_to_error_log( 'email_field_id', $email_field_id );
+                    $selected_form_id = carbon_get_post_meta( $post_id, 'ctgfapi_selected_form' );
 
                     if( $form['id'] == $selected_form_id ){
+
+                        $first_name_field_id    = carbon_get_post_meta( $post_id, 'ctgfapi_user_first_name' );
+                        $last_name_field_id     = carbon_get_post_meta( $post_id, 'ctgfapi_user_last_name' );
+                        $email_field_id         = carbon_get_post_meta( $post_id, 'ctgfapi_user_email' );
 
                         // essential required data
                         $submission_data = array(
@@ -120,7 +117,7 @@ class ApiHandler
             // fallbacks/filter
             $data = wp_parse_args( $data, $defaults );
 
-            $this->write_to_error_log( 'data before call', $data );
+            HelperFunctions::error_log( 'data before call', $data );
 
             // first check if the client already exists or not
             if( isset($data['email']) ){
@@ -139,12 +136,12 @@ class ApiHandler
 
                 if( !is_wp_error($response) && ($response['response']['code'] == 200 || $response['response']['code'] == 201) ){
                     
-                    // $this->write_to_error_log( 'response_success', $response );
+                    // HelperFunctions::error_log( 'response_success', $response );
                     $response_body = json_decode( $response['body'] );
 
                 }else{
                     
-                    $this->write_to_error_log( 'response_error', $response );
+                    HelperFunctions::error_log( 'response_error', $response );
 
                 }
 
@@ -153,23 +150,9 @@ class ApiHandler
             }
 
         }else{
-            $this->write_to_error_log( 'API keys not set', array( $api_access_token, $api_web_key ) );
+            HelperFunctions::error_log( 'API keys not set', array( $api_access_token, $api_web_key ) );
         }
 
     }
-
-
-
-    public function write_to_error_log( $label = '', $data = array() )
-    {
-        ob_start();
-        echo $label . ":\n";
-        var_dump( $data );
-        $log = ob_get_clean();
-
-        error_log( $log );
-
-    }
-
 
 }

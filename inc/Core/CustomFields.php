@@ -181,6 +181,7 @@ class CustomFields
         // user email field
         $user_email_field = Field::make( 'select', 'ctgfapi_user_email', __( 'User Email' ) );
         $user_email_field->add_options( array( $this, 'get_gform_fields' ) );
+        $user_email_field->set_default_value( '5' );
         $user_email_field->set_conditional_logic( array(
             array(
                 'field'     => 'ctgfapi_selected_form',

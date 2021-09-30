@@ -9,7 +9,6 @@ final class Init
     public static function get_services()
     {
         return array(
-            Base\SettingsLink::class,
             Base\Enqueue::class,
             Admin\AdminNotice::class,
             Api\ApiHandler::class,
