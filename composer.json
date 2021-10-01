@@ -9,9 +9,6 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {
-        "htmlburger/carbon-fields": "^3.4@beta"
-    },
     "autoload": {
         "psr-4": {"Inc\\" : "./inc"}
     }

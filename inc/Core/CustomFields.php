@@ -1,8 +1,7 @@
 <?php 
 namespace Inc\Core;
-use \Carbon_Fields\Carbon_Fields;
-use \Carbon_Fields\Container;
-use \Carbon_Fields\Field;
+use \Inc\Base\HelperFunctions;
+use \Inc\Api\ApiHandler;
 use \GFAPI;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -12,31 +11,266 @@ class CustomFields
     public function register()
     {
 
-        // load carbon fields
-        add_action( 'after_setup_theme', array( $this, 'load_carbon_fields' ) );
-
-        // register carbon fields
-        add_action( 'carbon_fields_register_fields', array( $this, 'register_carbon_fields' ) );
+        // load CMB2 files
+        $cmb2_init_file_path = CTGF_API_PATH . 'cmb2/init.php';
+        if( file_exists( $cmb2_init_file_path ) ){
+            require_once $cmb2_init_file_path;
+        }
+        
+        // create admin options page
+        add_action( 'cmb2_admin_init', array( $this, 'create_admin_options_page' ) );
+        
+        // create meta box and custom fiels for CPI
+        add_action( 'cmb2_admin_init', array( $this, 'register_cpt_custom_fields' ) );
 
 
     }
 
-
-    public function cpt_fields()
+    public function create_admin_options_page()
     {
-        $custom_fields = array();
+        $cmb2_options_page = new_cmb2_box( array(
+            'id'           => 'ctgfapi_options_page',
+            'title'        => 'ClientTether Gravity Forms Integration',
+            'object_types' => array( 'options-page' ),
+            'option_key'   => CTGF_API_ADMIN_PAGE,
+            'icon_url'     => CTGF_API_URL . 'assets/img/admin-icon.png',
+            'menu_title'   => 'ClientTether',
+            'position'     => 99,
+            'save_button'  => 'Save',
+        ) );
 
-        return $custom_fields;
+        $cmb2_options_page->add_field( array(
+            'id'   => 'ctgfapi_access_token',
+            'name' => 'ClientTether Access Token',
+            'type' => 'text',
+        ) );
+        
+        $cmb2_options_page->add_field( array(
+            'id'   => 'ctgfapi_web_key',
+            'name' => 'ClientTether Web Key',
+            'type' => 'text',
+        ) );
+    }
+
+
+    public function register_cpt_custom_fields()
+    {
+        $cpt_meta_box = new_cmb2_box( array(
+            'id'            => 'ctgfapi_cpt_meta_box',
+            'title'         => 'Lead Data',
+            'object_types'  => array( 'ctgfapi_entry_rules' ), // Post type
+            'context'       => 'normal',
+            'priority'      => 'high',
+            'show_names'    => true, // Show field names on the left
+        ) );
+
+
+        // status field
+        $cpt_meta_box->add_field( array(
+            'id'        => 'ctgfapi_entry_status',
+            'name'      => 'Status',
+            'type'      => 'checkbox',
+        ) );
+
+        // gravity form select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_selected_form',
+            'name'             => 'Select Form',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_gravity_forms' ),
+        ) );
+        
+        // user first name select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_user_first_name',
+            'name'             => 'User First Name',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_gform_fields' ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+        
+        // user last name select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_user_last_name',
+            'name'             => 'User Last Name',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_gform_fields' ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+        
+        // user email select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_user_email',
+            'name'             => 'User Email',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_gform_fields' ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+        
+        // lead action plan select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_lead_action_plan',
+            'name'             => 'Lead Action Plan',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_lead_action_plan_list' ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+        
+        // lead Source select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_lead_source',
+            'name'             => 'Lead Source',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_lead_source_list' ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+        
+        // lead sales cycle select field
+        $cpt_meta_box->add_field( array(
+            'id'               => 'ctgfapi_lead_sales_cycle',
+            'name'             => 'Lead Sales Cycle',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_lead_sales_cycle_list' ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+
+        // repeatable attributes group
+        $attr_group = $cpt_meta_box->add_field( array(
+            'id'          => 'ctgfapi_secondary_fields',
+            'type'        => 'group',
+            'description' => 'Select lead Attributes',
+            'options'     => array(
+                'group_title'       => 'Attribute {#}',
+                'add_button'        => 'Add Attribute',
+                'remove_button'     => 'Remove Attribute',
+                'sortable'          => true,
+            ),
+            'show_on_cb'  => array( $this, 'is_gform_selected' ),
+        ) );
+
+        // secondary fields status
+        $cpt_meta_box->add_group_field( $attr_group, array(
+            'id'        => 'ctgfapi_secondary_field_status',
+            'name'      => 'Status',
+            'type'      => 'checkbox',
+        ) );
+
+        // select Attribute
+        $cpt_meta_box->add_group_field( $attr_group, array(
+            'id'               => 'ctgfapi_secondary_attribute',
+            'name'             => 'Attribute',
+            'type'             => 'select',
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_secondary_attribute_options' ),
+        ) );
+        
+        // select value type
+        $cpt_meta_box->add_group_field( $attr_group, array(
+            'id'               => 'ctgfapi_secondary_attribute_value_type',
+            'type'             => 'radio',
+            'default'          => 'static_value',
+            'options'          => array(
+                'static_value'      => 'Static Value',
+                'form_field_value'  => 'Form Field',
+            ),
+        ) );
+        
+        // static attribute value
+        $cpt_meta_box->add_group_field( $attr_group, array(
+            'id'               => 'ctgfapi_secondary_attribute_value_static',
+            'name'             => 'Enter Static Value',
+            'type'             => 'text',
+            'show_on_cb'       => array( $this, 'select_attr_static_value' ),
+        ) );
+        
+        // from attribute value
+        $cpt_meta_box->add_group_field( $attr_group, array(
+            'id'               => 'ctgfapi_secondary_attribute_value_form_field',
+            'name'             => 'Select Form Field',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_gform_fields' ),
+            'show_on_cb'       => array( $this, 'select_attr_form_field_value' ),
+        ) );
+
+    }
+
+    
+    public function get_lead_action_plan_list()
+    {
+        $action_plans = ApiHandler::get_data_list( 'action_plan' );
+
+        if( !empty($action_plans) ){
+            return $action_plans;
+        }
+
+        return array();
+
+    }
+
+
+    public function get_lead_source_list()
+    {
+        $source_list = ApiHandler::get_data_list( 'source' );
+
+        if( !empty($source_list) ){
+            return $source_list;
+        }
+
+        return array();
+    }
+
+
+    public function get_lead_sales_cycle_list()
+    {
+        $sales_cycle = ApiHandler::get_data_list( 'sales_cycle' );
+
+        if( !empty($sales_cycle) ){
+            return $sales_cycle;
+        }
+
+        return array();
+    }
+
+
+    public function get_gravity_forms()
+    {
+        $gravity_forms = array();
+
+        if( class_exists('GFAPI') ){
+            $forms = GFAPI::get_forms();
+            foreach( $forms as $form ){
+                $gravity_forms[ $form['id'] ] = $form['title'];
+            }
+        }
+
+        return $gravity_forms;
     }
 
 
     public function get_gform_fields()
     {
+        global $post;
         $options = array();
 
-        if( class_exists('GFAPI') ){
+        if( class_exists('GFAPI') && isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
 
-            $selected_form_id = carbon_get_post_meta( get_the_ID(), 'ctgfapi_selected_form' );
+            $selected_form_id = get_post_meta( $post->ID, 'ctgfapi_selected_form', true );
 
             if( isset($selected_form_id) && $selected_form_id > 0 ){
 
@@ -50,10 +284,9 @@ class CustomFields
 
                         foreach( $form_fields as $field ){
 
-                            $array_key      = (string)$field->id;
-                            $array_value    = (string)$field->label;
-
-                            $options[$array_key] = $array_value;
+                            $array_key              = (string)$field->id;
+                            $array_value            = (string)$field->label;
+                            $options[$array_key]    = $array_value;
 
                         }
 
@@ -67,215 +300,70 @@ class CustomFields
         }
 
         return $options;
+    }
+
+
+    public function is_gform_selected()
+    {
+        global $post;
+        if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
+            $selected_form_id = get_post_meta( $post->ID, 'ctgfapi_selected_form', true );
+            if( isset($selected_form_id) && $selected_form_id !== '' && $selected_form_id > 0 ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public function select_attr_static_value( $field )
+    {
+        global $post;
+        if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
+            $index              = $field->group->index;
+            $group_val          = $field->group->value();
+            $attr_value_type    = $group_val[ $index ]['ctgfapi_secondary_attribute_value_type'];
+
+            if( $attr_value_type == 'static_value' ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public function select_attr_form_field_value( $field )
+    {
+        global $post;
+        if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
+            $index              = $field->group->index;
+            $group_val          = $field->group->value();
+            $attr_value_type    = $group_val[ $index ]['ctgfapi_secondary_attribute_value_type'];
+
+            if( $attr_value_type == 'form_field_value' ){
+                return true;
+            }
+        }
+        return false;
     }
 
 
     public function get_secondary_attribute_options()
     {
         $options = array(
-            '0'         => 'Select',
-            'phone'     => 'Phone Number',
-            'smsok'     => 'SMS Consent',
-            'address'   => 'User Address',
-            'city'      => 'User City',
-            'state'     => 'User State',
-            'zip'       => 'User Zip Code',
-            'compName'  => 'User Compnay Name',
-            'age'       => 'User Age',
-            'gender'    => 'User Gender',
+            '0'             => 'Select',
+            'phone'         => 'Phone Number',
+            'smsok'         => 'SMS Consent',
+            'address'       => 'User Address',
+            'city'          => 'User City',
+            'state'         => 'User State',
+            'zip'           => 'User Zip Code',
+            'compName'      => 'User Compnay Name',
+            'age'           => 'User Age',
+            'gender'        => 'User Gender',
+            'whiteboard'    => 'Whiteboard note',
         );
         return $options;
     }
-
-
-    public function get_secondary_attribute_value_form_field_options()
-    {
-        $options = array();
-
-        if( class_exists('GFAPI') ){
-
-            $selected_form_id = carbon_get_post_meta( get_the_ID(), 'ctgfapi_selected_form' );
-
-            if( isset($selected_form_id) && $selected_form_id > 0 ){
-
-                $form = GFAPI::get_form( $selected_form_id );
-
-                if( isset($form) && $form !== false ){
-                    
-                    $form_fields = $form['fields'];
-
-                    if( is_array($form_fields) && !empty($form_fields) ){
-
-                        foreach( $form_fields as $field ){
-                            $options[$field->id] = $field->label;
-                        }
-
-                    }
-
-
-                }
-
-            }
-
-        }
-
-        return $options;
-    }
-
-
-    public function load_carbon_fields()
-    {
-        Carbon_Fields::boot();
-    }
-
-
-    public function register_carbon_fields()
-    {
-        // main plugin options page
-        $options_page = Container::make( 'theme_options', CTGF_API_ADMIN_PAGE ,__( 'ClientTether Gravity Forms Integration' ) );
-        $options_page->set_page_menu_title( 'ClientTether' );
-        $options_page->set_icon( CTGF_API_URL . 'assets/img/admin-icon.png' );
-        $options_page->set_page_menu_position( 99 );
-        $options_page->add_fields( array(
-            Field::make( 'text', 'ctgfapi_access_token', __( 'ClientTether Access Token' ) ),
-            Field::make( 'text', 'ctgfapi_web_key', __( 'ClientTether Web Key' ) ),
-        ) );
-
-
-        // CPT Custom fields
-        $cpt_met_box = Container::make( 'post_meta', 'ctgfapi-cpt-meta-box' ,'Setup Lead Data' );
-        $cpt_met_box->where( 'post_type', '=', 'ctgfapi_entry_rules' );
-
-        // entry stats field
-        $entry_status_field = Field::make( 'checkbox', 'ctgfapi_entry_status', 'Status' );
-        $entry_status_field->set_option_value( 'enabled' );
-        $entry_status_field->set_default_value( 'enabled' );
-
-        // gravity form field
-        $gform_field = Field::make( 'gravity_form', 'ctgfapi_selected_form', __( 'Select Form' ) );
-        $gform_field->set_required( true );
-        $gform_field->set_default_value( '0' );
-
-        // user first name field
-        $user_first_name_field = Field::make( 'select', 'ctgfapi_user_first_name', __( 'User First Name' ) );
-        $user_first_name_field->add_options( array( $this, 'get_gform_fields' ) );
-        $user_first_name_field->set_conditional_logic( array(
-            array(
-                'field'     => 'ctgfapi_selected_form',
-                'compare'   => '>',
-                'value'     => '0',
-            ),
-        ) );
-        
-        // user last name field
-        $user_last_name_field = Field::make( 'select', 'ctgfapi_user_last_name', __( 'User Last Name' ) );
-        $user_last_name_field->add_options( array( $this, 'get_gform_fields' ) );
-        $user_last_name_field->set_conditional_logic( array(
-            array(
-                'field'     => 'ctgfapi_selected_form',
-                'compare'   => '>',
-                'value'     => '0',
-            ),
-        ));
-        
-        // user email field
-        $user_email_field = Field::make( 'select', 'ctgfapi_user_email', __( 'User Email' ) );
-        $user_email_field->add_options( array( $this, 'get_gform_fields' ) );
-        $user_email_field->set_default_value( '5' );
-        $user_email_field->set_conditional_logic( array(
-            array(
-                'field'     => 'ctgfapi_selected_form',
-                'compare'   => '>',
-                'value'     => '0',
-            ),
-        ));
-
-        // add required fields
-        $cpt_met_box->add_fields( array( 
-            $entry_status_field, 
-            $gform_field, 
-            $user_first_name_field, 
-            $user_last_name_field,
-            $user_email_field,
-        ) );
-
-        // secondary fields template
-        $status_field = Field::make( 'checkbox', 'ctgfapi_secondary_field_status', 'Status' );
-        $status_field->set_option_value( 'enabled' );
-        $status_field->set_default_value( 'enabled' );
-
-        $attribute_field = Field::make( 'select', 'ctgfapi_secondary_attribute', 'Attribute' );
-        $attribute_field->add_options( array( $this, 'get_secondary_attribute_options' ) );
-
-        $attribute_value_type = Field::make( 'radio', 'ctgfapi_secondary_attribute_value_type', 'Value Type' );
-        $attribute_value_type->add_options( array( 
-            'static_value'      => 'Static Value',
-            'form_field_value'  => 'Form Field',
-        ) );
-        $attribute_value_type->set_conditional_logic( array( 
-            array(
-                'field'     => 'ctgfapi_secondary_attribute',
-                'compare'   => '!=',
-                'value'     => '0',
-            ),
-        ) );
-
-        $attribute_value_static = Field::make( 'text', 'ctgfapi_secondary_attribute_value_static', 'Enter Static Value' );
-        $attribute_value_static->set_conditional_logic( array( 
-            array(
-                'field'     => 'ctgfapi_secondary_attribute',
-                'compare'   => '!=',
-                'value'     => '0',
-            ),
-            array(
-                'field'     => 'ctgfapi_secondary_attribute_value_type',
-                'compare'   => '=',
-                'value'     => 'static_value',
-            ),
-        ) );
-
-        $attribute_value_form_field = Field::make( 'select', 'ctgfapi_secondary_attribute_value_form_field', 'Select Form Field' );
-        $attribute_value_form_field->add_options( array( $this, 'get_secondary_attribute_value_form_field_options' ) );
-        $attribute_value_form_field->set_conditional_logic( array( 
-            array(
-                'field'     => 'ctgfapi_secondary_attribute',
-                'compare'   => '!=',
-                'value'     => '0',
-            ),
-            array(
-                'field'     => 'ctgfapi_secondary_attribute_value_type',
-                'compare'   => '=',
-                'value'     => 'form_field_value',
-            ),
-        ) );
-
-
-        // Secondary fields group
-        $field_group = Field::make( 'complex', 'ctgfapi_secondary_fields', 'Secondary Values' );
-        $field_group->set_collapsed( false );
-        $field_group->add_fields( array(
-            $status_field,
-            $attribute_field,
-            $attribute_value_type,
-            $attribute_value_static,
-            $attribute_value_form_field,
-        ) );
-
-        $cpt_met_box->add_fields( array( $field_group ) );
-
-    }
-
-
-    public function write_to_error_log( $label = '', $data = array() )
-    {
-        ob_start();
-        echo $label . ":\n";
-        var_dump( $data );
-        $log = ob_get_clean();
-
-        error_log( $log );
-
-    }
-    
 
 }
