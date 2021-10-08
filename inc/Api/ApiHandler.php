@@ -2,6 +2,7 @@
 namespace Inc\Api;
 use \Inc\Admin\AdminNotice;
 use \Inc\Base\HelperFunctions;
+use \GFAPI;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -50,12 +51,12 @@ class ApiHandler
                         $last_name_field_id     = get_post_meta( $post_id, 'ctgfapi_user_last_name', true );
                         $email_field_id         = get_post_meta( $post_id, 'ctgfapi_user_email', true );
                         $action_plan_id         = get_post_meta( $post_id, 'ctgfapi_lead_action_plan', true );
-                        $sales_cycle_id         = get_post_meta( $post_id, 'ctgfapi_lead_source', true );
-                        $lead_source_id         = get_post_meta( $post_id, 'ctgfapi_lead_sales_cycle', true );
+                        $sales_cycle_id         = get_post_meta( $post_id, 'ctgfapi_lead_sales_cycle', true );
+                        $lead_source_id         = get_post_meta( $post_id, 'ctgfapi_lead_source', true );
                         
-                        $action_plan_id         = isset( $action_plan_id ) ? $action_plan_id : null;
-                        $sales_cycle_id         = isset( $sales_cycle_id ) ? $sales_cycle_id : null;
-                        $lead_source_id         = isset( $lead_source_id ) ? $lead_source_id : null;
+                        $action_plan_id         = isset( $action_plan_id ) ? $action_plan_id : '0';
+                        $sales_cycle_id         = isset( $sales_cycle_id ) ? $sales_cycle_id : '0';
+                        $lead_source_id         = isset( $lead_source_id ) ? $lead_source_id : '0';
 
                         // essential required data
                         $submission_data = array(
@@ -87,7 +88,44 @@ class ApiHandler
 
                                     }elseif ( isset($field_type) && isset($field_form_field_id) && $field_type == 'form_field_value' ) {
                                         
-                                        $submission_data[ $field_attr_key ] = esc_html( rgar( $entry, $field_form_field_id ) );
+                                        // handle multiple data points for whiteboard note value
+                                        if( $field_attr_key == 'whiteboard' ){
+
+
+                                            // string variable for data
+                                            $current_form_field_label = '';
+                                            $current_form_field_value = '';
+
+                                            // get current gform field object
+                                            $current_form_id    = $form['id'];
+                                            $current_field_id   = $field_form_field_id;
+                                            $current_field_obj  = GFAPI::get_field(  $current_form_id, $current_field_id );
+
+                                            if( $current_field_obj !== false && isset( $current_field_obj->label ) ){
+                                                $current_form_field_label = $current_field_obj->label;
+                                            }
+
+                                            // get form field value
+                                            $current_form_field_value = rgar( $entry, $field_form_field_id );
+                                            if( !(isset( $current_form_field_value ) && gettype( $current_form_field_value ) == 'string') ){
+                                                $current_form_field_value = 'N/A';
+                                            }
+
+                                            // handle fields with array as return value
+                                            if( in_array( $current_field_obj->type, array( 'multiselect', 'checkbox' ) ) ){
+                                                $current_form_field_value = $current_field_obj->get_value_export( $entry, $field_form_field_id, true );
+                                            }
+
+                                            // update value
+                                            $whiteboard_data_item = '<p>(' . $current_form_field_label .' : '. $current_form_field_value . ')</p>';
+                                            $submission_data[ $field_attr_key ] .= $whiteboard_data_item;
+
+
+                                        }else{
+
+                                            $submission_data[ $field_attr_key ] = strval( esc_html( rgar( $entry, $field_form_field_id ) ) );
+
+                                        }
 
                                     }
                                     

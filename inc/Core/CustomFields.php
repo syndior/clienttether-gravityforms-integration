@@ -241,7 +241,8 @@ class CustomFields
         $sales_cycle = ApiHandler::get_data_list( 'sales_cycle' );
 
         if( !empty($sales_cycle) ){
-            return $sales_cycle;
+            $new_lead_option = array( '-1' => 'New Lead' );
+            return  array_merge( $new_lead_option,  $sales_cycle );
         }
 
         return array();
@@ -322,11 +323,17 @@ class CustomFields
         if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
             $index              = $field->group->index;
             $group_val          = $field->group->value();
-            $attr_value_type    = $group_val[ $index ]['ctgfapi_secondary_attribute_value_type'];
+            
+            if( isset($group_val[ $index ]['ctgfapi_secondary_attribute_value_type']) ){
 
-            if( $attr_value_type == 'static_value' ){
-                return true;
+                $attr_value_type    = $group_val[ $index ]['ctgfapi_secondary_attribute_value_type'];
+
+                if( $attr_value_type == 'static_value' ){
+                    return true;
+                }
+
             }
+
         }
         return false;
     }
@@ -338,11 +345,17 @@ class CustomFields
         if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
             $index              = $field->group->index;
             $group_val          = $field->group->value();
-            $attr_value_type    = $group_val[ $index ]['ctgfapi_secondary_attribute_value_type'];
 
-            if( $attr_value_type == 'form_field_value' ){
-                return true;
+            if( isset($group_val[ $index ]['ctgfapi_secondary_attribute_value_type']) ){
+
+                $attr_value_type    = $group_val[ $index ]['ctgfapi_secondary_attribute_value_type'];
+
+                if( $attr_value_type == 'form_field_value' ){
+                    return true;
+                }
+
             }
+
         }
         return false;
     }
