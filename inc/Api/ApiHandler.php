@@ -135,8 +135,30 @@ class ApiHandler
 
                         }
 
-                        if( $this->client_exists( $submission_data ) == false ){
-                            $this->create_client( $submission_data );                            
+                        $client_exists = $this->client_exists( $submission_data );
+
+                        if( $client_exists == false ){
+                            // create new client
+                            $this->create_client( $submission_data );
+                        }else{
+
+                            // update existing client
+                            if( isset( $client_exists['data'] ) ){
+
+                                $client_id = $client_exists['data'][0]['client_id'];
+                                if( isset($client_id) && $client_id > 0 ){
+
+                                    $submission_data['client_id'] = $client_id;
+                                    $this->update_client( $submission_data );
+
+                                }else{
+                                    HelperFunctions::error_log( 'error client id not set', $client_id );
+                                }
+
+                            }else{
+                                HelperFunctions::error_log( 'error client data not set', $client_exists );
+                            }
+
                         }
 
                     }
@@ -225,6 +247,84 @@ class ApiHandler
             HelperFunctions::error_log( 'API keys not set', array( $api_access_token, $api_web_key ) );
         }
     }
+    
+    
+    public function update_client( array $data = array(), $client_id = 0 )
+    {
+        // API header parameters
+        $api_access_token   = CLIENTTETHER_API_ACCESS_TOKEN;
+        $api_web_key        = CLIENTTETHER_API_WEB_KEY;
+
+        if( ( isset($api_access_token) && strlen($api_access_token) > 0 ) && ( isset($api_web_key) && strlen($api_web_key) > 0 ) ){
+
+            // submittion data
+            $defaults = array(
+                'client_id'         => null,
+                'firstName'         => '',
+                'lastName'          => '',
+                'phone'             => null,
+                'email'             => null,
+                'smsok'             => null,
+                'address'           => null,
+                'city'              => null,
+                'state'             => null,
+                'zip'               => null,
+                'compName'          => null,
+                'age'               => null,
+                'gender'            => null,
+                'action_plan_id'    => null,
+                'sales_cycle_id'    => null,
+                'lead_source_id'    => null,
+            );
+
+            // fallbacks/filter
+            $data = wp_parse_args( $data, $defaults );
+
+            // first check if first name , last name and email is provided
+            if( isset($data['client_id']) && isset($data['firstName']) && isset($data['lastName']) && isset($data['email']) ){
+
+                // make API url
+                $url = CLIENTTETHER_API_URL . 'update_client_by_id';
+                $post_fields = array_filter( $data );
+                
+                // phone number formating
+                if( isset( $post_fields['phone'] ) ){
+                    $post_fields['phone'] = preg_replace( '/[^0-9]/', '', $post_fields['phone'] );
+                }
+                
+                $api_endpoint = add_query_arg( $post_fields, $url );
+
+                // API args
+                $api_args = array();
+                $api_args['method']  = 'POST';
+                $api_args['headers'] = array();
+                $api_args['headers']['X-Access-Token']  = $api_access_token;
+                $api_args['headers']['X-Web-Key']       = $api_web_key;
+
+                $response = wp_remote_request( $api_endpoint , $api_args );
+
+                if( !is_wp_error($response) && ($response['response']['code'] == 200 || $response['response']['code'] == 201) ){
+                    
+                    // api response
+                    $response_body = json_decode( $response['body'], true );
+
+                    // if error with client creation
+                    if( !($response_body['ResultCode'] == 'CT_200') ){
+                        HelperFunctions::error_log( 'error updating client', $response_body );
+                    }
+
+                }else{
+                    HelperFunctions::error_log( 'response_error', $response );
+                }
+
+            }else{
+                HelperFunctions::error_log( 'client_id, first_name, last_name and email fields are required', $data );
+            }
+
+        }else{
+            HelperFunctions::error_log( 'API keys not set', array( $api_access_token, $api_web_key ) );
+        }
+    }
 
 
     public function client_exists( array $data = array() )
@@ -277,7 +377,7 @@ class ApiHandler
                     if( !($response_body['ResultCode'] == 'CT_200') && !($response_body['TotalRecord'] >= 1) && $response_body['ResultCode'] == 'CT_515' ){
                         return false;
                     }else{
-                        return true;
+                        return $response_body;
                     }
 
                 }else{
