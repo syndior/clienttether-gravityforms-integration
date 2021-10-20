@@ -249,7 +249,7 @@ class ApiHandler
     }
     
     
-    public function update_client( array $data = array(), $client_id = 0 )
+    public function update_client( array $data = array() )
     {
         // API header parameters
         $api_access_token   = CLIENTTETHER_API_ACCESS_TOKEN;
