@@ -148,7 +148,33 @@ class ApiHandler
                                 $client_id = $client_exists['data'][0]['client_id'];
                                 if( isset($client_id) && $client_id > 0 ){
 
+                                    // changle lead attr for duplicate submission if logic is enabled
+                                    $duplicate_submission_options           = get_post_meta( $post_id, 'ctgfapi_duplicate_submission', true );
+                                    $duplicate_submission_logic_status      = $duplicate_submission_options[0]['ctgfapi_enable_duplicate_submission_logic'];
+                                    if( $duplicate_submission_logic_status == 'enabled' ){
+
+                                        // get values
+                                        $duplicate_action_plan_id       = $duplicate_submission_options[0]['ctgfapi_duplicate_lead_action_plan'];
+                                        $duplicate_sales_cycle_id       = $duplicate_submission_options[0]['ctgfapi_duplicate_lead_sales_cycle'];
+                                        $duplicate_lead_source_id       = $duplicate_submission_options[0]['ctgfapi_duplicate_lead_source'];
+
+                                        // null check
+                                        $duplicate_action_plan_id = isset( $duplicate_action_plan_id ) ? $duplicate_action_plan_id : '0';
+                                        $duplicate_sales_cycle_id = isset( $duplicate_sales_cycle_id ) ? $duplicate_sales_cycle_id : '0';
+                                        $duplicate_lead_source_id = isset( $duplicate_lead_source_id ) ? $duplicate_lead_source_id : '0';
+
+                                        // set values
+                                        $submission_data['action_plan_id']  = $duplicate_action_plan_id;
+                                        $submission_data['sales_cycle_id']  = $duplicate_sales_cycle_id;
+                                        $submission_data['lead_source_id']  = $duplicate_lead_source_id;
+                                    }
+
+                                    // enable smsok for duplicate submission
+                                    $submission_data['smsok'] = 1;
+
+                                    // set client_id for duplicate submission
                                     $submission_data['client_id'] = $client_id;
+
                                     $this->update_client( $submission_data );
 
                                 }else{
@@ -450,7 +476,8 @@ class ApiHandler
                             }
 
                         }elseif( $lists_type == 'sales_cycle' ){
-
+                            
+                            $data_list['-1'] = 'New Lead';
                             foreach( $response_body['data'] as $list_item ){
                                 $data_list[ $list_item['sales_cycle_id'] ] = $list_item['sales_cycle_name'];
                             }

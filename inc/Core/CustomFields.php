@@ -148,6 +148,64 @@ class CustomFields
             'show_on_cb'       => array( $this, 'is_gform_selected' ),
         ) );
 
+        // duplicate submission logic group
+        $duplicate_group = $cpt_meta_box->add_field( array(
+            'id'          => 'ctgfapi_duplicate_submission',
+            'type'        => 'group',
+            'description' => 'Duplicate submission options',
+            'repeatable'  => false,
+            'show_on_cb'  => array( $this, 'is_gform_selected' ),
+        ) );
+
+        // duplicate submission logic status
+        $cpt_meta_box->add_group_field( $duplicate_group, array(
+            'id'               => 'ctgfapi_enable_duplicate_submission_logic',
+            'name'             => 'Enable duplicate submission logic',
+            'type'             => 'select',
+            'show_option_none' => false,
+            'options'          => array(
+                'disabled'  => 'Disabled',
+                'enabled'   => 'Enabled',
+            ),
+            'show_on_cb'       => array( $this, 'is_gform_selected' ),
+        ) );
+
+        // lead action plan select field
+        $cpt_meta_box->add_group_field(  $duplicate_group, array(
+            'id'               => 'ctgfapi_duplicate_lead_action_plan',
+            'name'             => 'Lead Action Plan',
+            'description'      => 'In case of duplicate submission',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_lead_action_plan_list' ),
+            'show_on_cb'       => array( $this, 'is_duplicate_submission_enabled' ),
+        ) );
+        
+        // lead Source select field
+        $cpt_meta_box->add_group_field(  $duplicate_group, array(
+            'id'               => 'ctgfapi_duplicate_lead_source',
+            'name'             => 'Lead Source',
+            'description'      => 'In case of duplicate submission',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_lead_source_list' ),
+            'show_on_cb'       => array( $this, 'is_duplicate_submission_enabled' ),
+        ) );
+        
+        // lead sales cycle select field
+        $cpt_meta_box->add_group_field(  $duplicate_group, array(
+            'id'               => 'ctgfapi_duplicate_lead_sales_cycle',
+            'name'             => 'Lead Sales Cycle',
+            'description'      => 'In case of duplicate submission',
+            'type'             => 'select',
+            'show_option_none' => true,
+            'default'          => 'custom',
+            'options_cb'       => array( $this, 'get_lead_sales_cycle_list' ),
+            'show_on_cb'       => array( $this, 'is_duplicate_submission_enabled' ),
+        ) );
+        
         // repeatable attributes group
         $attr_group = $cpt_meta_box->add_field( array(
             'id'          => 'ctgfapi_secondary_fields',
@@ -241,8 +299,7 @@ class CustomFields
         $sales_cycle = ApiHandler::get_data_list( 'sales_cycle' );
 
         if( !empty($sales_cycle) ){
-            $new_lead_option = array( '-1' => 'New Lead' );
-            return  array_merge( $new_lead_option,  $sales_cycle );
+            return $sales_cycle;
         }
 
         return array();
@@ -310,6 +367,20 @@ class CustomFields
         if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
             $selected_form_id = get_post_meta( $post->ID, 'ctgfapi_selected_form', true );
             if( isset($selected_form_id) && $selected_form_id !== '' && $selected_form_id > 0 ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public function is_duplicate_submission_enabled( $field )
+    {
+        global $post;
+        if( isset($post) && $post->post_type == 'ctgfapi_entry_rules' ){
+            $duplicate_submission_options       = get_post_meta( $post->ID, 'ctgfapi_duplicate_submission', true );
+            $duplicate_submission_logic_status  = $duplicate_submission_options[0]['ctgfapi_enable_duplicate_submission_logic'];
+            if( $duplicate_submission_logic_status == 'enabled' && $this->is_gform_selected() == true ){
                 return true;
             }
         }
