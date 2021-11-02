@@ -89,7 +89,7 @@ class ApiHandler
                                     }elseif ( isset($field_type) && isset($field_form_field_id) && $field_type == 'form_field_value' ) {
                                         
                                         // handle multiple data points for whiteboard note value
-                                        if( $field_attr_key == 'whiteboard' ){
+                                        if( $field_attr_key == 'append_whiteboard' ){
 
 
                                             // string variable for data

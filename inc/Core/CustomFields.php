@@ -435,17 +435,17 @@ class CustomFields
     public function get_secondary_attribute_options()
     {
         $options = array(
-            '0'             => 'Select',
-            'phone'         => 'Phone Number',
-            'smsok'         => 'SMS Consent',
-            'address'       => 'User Address',
-            'city'          => 'User City',
-            'state'         => 'User State',
-            'zip'           => 'User Zip Code',
-            'compName'      => 'User Compnay Name',
-            'age'           => 'User Age',
-            'gender'        => 'User Gender',
-            'whiteboard'    => 'Whiteboard note',
+            '0'                 => 'Select',
+            'phone'             => 'Phone Number',
+            'smsok'             => 'SMS Consent',
+            'address'           => 'User Address',
+            'city'              => 'User City',
+            'state'             => 'User State',
+            'zip'               => 'User Zip Code',
+            'compName'          => 'User Compnay Name',
+            'age'               => 'User Age',
+            'gender'            => 'User Gender',
+            'append_whiteboard' => 'Whiteboard note',
         );
         return $options;
     }
